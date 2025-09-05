@@ -4,6 +4,7 @@ import os
 import subprocess
 import psutil
 import configparser as cp
+import datetime
 
 # Parse configs
 try:
@@ -13,7 +14,6 @@ try:
     print(a)
 except Exception:
     pass
-
 
 
 # Change this to the directory you want to list files from
@@ -27,7 +27,8 @@ AS_PROCESS_PATH = "C:/AccuServer/AccuServer.exe"
 def get_files(directory=CUSTOM_DIR):
     """Return a list of files in the given directory."""
     try:
-        return sorted(os.listdir(directory))
+        files_list = [item for item in os.listdir(directory) if item.endswith(".mdb")]
+        return sorted(files_list)
     except Exception as e:
         return
         messagebox.showerror("Error", f"Could not list files: {e}")
