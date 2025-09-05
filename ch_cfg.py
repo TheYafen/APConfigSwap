@@ -9,18 +9,22 @@ import configparser as cp
 try:
     config = cp.ConfigParser()
     config.read('config.ini')
+    a = config['DEFAULT']['test']
+    print(a)
 except Exception:
     pass
 
+
+
 # Change this to the directory you want to list files from
-TARGET_DIR = "C:/AccuServer/custom_db"
+CUSTOM_DIR = "C:/AccuServer/custom_db"
 TARGET_CFG = "C:/AccuServer/AccuServer.cfg"
 SEARCH_TEXT = "AccuServerDataAccess.POSDataAccess"
 AS_PROCESS_NAME = "AccuServer.exe"
 AS_PROCESS_PATH = "C:/AccuServer/AccuServer.exe"
 
 
-def get_files(directory=TARGET_DIR):
+def get_files(directory=CUSTOM_DIR):
     """Return a list of files in the given directory."""
     try:
         return sorted(os.listdir(directory))
@@ -105,8 +109,8 @@ root.geometry("500x200")
 root.resizable(False, False)
 
 # File section
-tk.Label(root, text=f"Select a file from {TARGET_DIR}:").pack(pady=5)
-files = get_files(TARGET_DIR)
+tk.Label(root, text=f"Select a file from {CUSTOM_DIR}:").pack(pady=5)
+files = get_files(CUSTOM_DIR)
 file_combo = ttk.Combobox(root, values=files, width=60)
 file_combo.pack(pady=5)
 
@@ -133,5 +137,21 @@ restart_accuserver_button.pack(side=tk.LEFT, padx=10)
 
 default_button = tk.Button(button_frame, text="Restore Default", command=lambda: change_customer_db(default=True))
 default_button.pack(side=tk.RIGHT, padx=15)
+
+# Test frame for test buttons
+test_frame = tk.Frame(root)
+test_frame.pack(pady=10)
+
+test_button1 = tk.Button(test_frame, text="Test Button 1", command=lambda: print("Test Button 1 clicked"))
+test_button1.pack(side=tk.LEFT, padx=10)
+
+test_button2 = tk.Button(test_frame, text="Test Button 2", command=lambda: print("Test Button 2 clicked"))
+test_button2.pack(side=tk.LEFT, padx=10)
+
+test_button3 = tk.Button(test_frame, text="Test Button 3", command=lambda: print("Test Button 3 clicked"))
+test_button3.pack(side=tk.LEFT, padx=10)
+
+test_button4 = tk.Button(test_frame, text="Test Button 4", command=lambda: print("Test Button 4 clicked"))
+test_button4.pack(side=tk.LEFT, padx=10)
 
 root.mainloop()
