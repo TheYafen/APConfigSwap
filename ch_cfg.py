@@ -1,70 +1,45 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk
 import os
 import subprocess
 import psutil
 import configparser as cp
-import datetime
+
+VERSION = "1.2.0"
 
 # Parse configs
 try:
     config = cp.ConfigParser()
     config.read('config.ini')
-    a = config['DEFAULT']['test']
-    print(a)
 except Exception:
     pass
 
-
 # Change this to the directory you want to list files from
-CUSTOM_DIR = "C:/AccuServer/custom_db"
+TARGET_DIR = "C:/AccuServer/custom_db"
 TARGET_CFG = "C:/AccuServer/AccuServer.cfg"
 SEARCH_TEXT = "AccuServerDataAccess.POSDataAccess"
 AS_PROCESS_NAME = "AccuServer.exe"
 AS_PROCESS_PATH = "C:/AccuServer/AccuServer.exe"
 
+def log_message(msg):
+    log_text.config(state='normal')
+    log_text.insert(tk.END, msg + "\n")
+    log_text.config(state='disabled')
+    log_text.see(tk.END)
 
-def get_files(directory=CUSTOM_DIR):
-    """Return a list of files in the given directory."""
+def get_files(directory=TARGET_DIR):
     try:
-        files_list = [item for item in os.listdir(directory) if item.endswith(".mdb")]
-        return sorted(files_list)
+        return sorted([f for f in os.listdir(directory) if f.endswith('.mdb')])
     except Exception as e:
-        return
-        messagebox.showerror("Error", f"Could not list files: {e}")
+        log_message(f"Error: Could not list files: {e}")
         return []
 
 def update_files():
     files = get_files()
     file_combo['values'] = files
+    log_message("File list updated.")
 
-
-def find_files(base_dir, filename):
-    """Search for files with a given name in all subdirectories.
-    Returns a list of dicts with name, path, size, and modified date."""
-    results = []
-    for root, dirs, files in os.walk(base_dir):
-        for f in files:
-            if f == filename:
-                path = os.path.join(root, f)
-                try:
-                    size = os.path.getsize(path)
-                    mtime = os.path.getmtime(path)
-                    modified = datetime.datetime.fromtimestamp(mtime)
-                except Exception:
-                    size, modified = None, None
-                results.append({
-                    "name": f,
-                    "path": path,
-                    "size": size,
-                    "modified": modified
-                })
-    return results
-    
-
-# File functions
 def change_customer_db(default=False):
-    """Open a config file, find a line containing SEARCH_TEXT, and replace it with a new line."""
     new_file = file_combo.get()
     if default:
         new_line = '<Module path=AccuPOS.mdb VerifyOrders=false backupPath=autoBackup ClearCustomersOnClosedSales=false dbDriver=JadoZoom>AccuServerDataAccess.POSDataAccess</Module>'
@@ -80,79 +55,60 @@ def change_customer_db(default=False):
                     f.write(new_line + "\n")
                 else:
                     f.write(line)
-        messagebox.showinfo("Success", f"Line containing '{SEARCH_TEXT}' updated successfully")
+        log_message(f"Config updated successfully for file: {new_file if not default else 'default database'}")
     except Exception as e:
-        messagebox.showerror("Error", f"Could not update config file: {e}")
+        log_message(f"Error: Could not update config file: {e}")
 
-
-# Process functions
 def restart_process(process_name, process_path):
-    """Look for a Windows process by name and restart it."""
     try:
-        # Kill process if running
         for proc in psutil.process_iter(attrs=["name"]):
             if proc.info["name"] == process_name:
                 proc.terminate()
                 proc.wait(timeout=5)
                 break
-
-        # Start process again
         subprocess.Popen([process_path], shell=True)
-        messagebox.showinfo("Success", f"Process '{process_name}' restarted successfully")
+        log_message(f"Process '{process_name}' restarted successfully.")
     except Exception as e:
-        messagebox.showerror("Error", f"Could not restart process: {e}")
+        log_message(f"Error: Could not restart process: {e}")
+
+def ldb_cleanup():
+    for f in os.listdir(TARGET_DIR):
+        if f.endswith('.ldb'):
+            try:
+                os.remove(os.path.join(TARGET_DIR, f))
+            except Exception as e:
+                log_message(f"Could not delete {f}: {e}")
+    log_message("LDB files cleaned up.")
 
 
-# GUI
+# GUI setup
 root = tk.Tk()
-root.title("Manager")
-root.geometry("500x200")
+root.title(f"dbSwap v {VERSION}")
+root.geometry("550x200")
 root.resizable(False, False)
 
-# File section
-tk.Label(root, text=f"Select a file from {CUSTOM_DIR}:").pack(pady=5)
-files = get_files(CUSTOM_DIR)
+tk.Label(root, text=f"Select a file from {TARGET_DIR}:").pack(pady=5)
+files = get_files(TARGET_DIR)
 file_combo = ttk.Combobox(root, values=files, width=60)
-file_combo.pack(pady=5)
-
-
+file_combo.pack(pady=3)
 if files:
     file_combo.current(0)
 
+button_frame_top = tk.Frame(root)
+button_frame_top.pack(pady=3)
 
+button_frame_bottom = tk.Frame(root)
+button_frame_bottom.pack(pady=3)
 
-# Frame for buttons
-button_frame = tk.Frame(root)
-#button_frame['borderwidth'] = 1
-#button_frame['relief'] = 'groove'
-button_frame.pack(pady=10)
+tk.Button(button_frame_top, text="Refresh DB list", command=update_files).pack(side=tk.LEFT, padx=5, pady=0)
+tk.Button(button_frame_top, text="Update config",   command=change_customer_db).pack(side=tk.LEFT, padx=5, pady=0)
+tk.Button(button_frame_top, text="Restore Default", command=lambda: change_customer_db(default=True)).pack(side=tk.LEFT, padx=5, pady=0)
 
-refresh_db_button = tk.Button(button_frame, text="Refresh DB list", command=update_files)
-refresh_db_button.pack(side=tk.LEFT, padx=10)
+tk.Button(button_frame_bottom, text="Clean LDB",    command=ldb_cleanup).pack(side=tk.LEFT, padx=5, pady=0)
+tk.Button(button_frame_bottom, text="Restart AccuServer", command=lambda: restart_process(AS_PROCESS_NAME, AS_PROCESS_PATH)).pack(side=tk.LEFT, padx=5)
 
-update_cfg_button = tk.Button(button_frame, text="Update config", command=change_customer_db)
-update_cfg_button.pack(side=tk.LEFT, padx=10)
-
-restart_accuserver_button = tk.Button(button_frame, text="Restart AccuServer", command=lambda: restart_process(AS_PROCESS_NAME, AS_PROCESS_PATH))
-restart_accuserver_button.pack(side=tk.LEFT, padx=10)
-
-default_button = tk.Button(button_frame, text="Restore Default", command=lambda: change_customer_db(default=True))
-default_button.pack(side=tk.RIGHT, padx=15)
-
-# Test frame for test buttons
-test_frame = tk.Frame(root)
-test_frame.pack(pady=10)
-
-test_button1 = tk.Button(test_frame, text="Test Button 1", command=lambda: print("Test Button 1 clicked"))
-test_button1.pack(side=tk.LEFT, padx=10)
-
-test_button2 = tk.Button(test_frame, text="Test Button 2", command=lambda: print("Test Button 2 clicked"))
-test_button2.pack(side=tk.LEFT, padx=10)
-
-test_button3 = tk.Button(test_frame, text="Test Button 3", command=lambda: print("Test Button 3 clicked"))
-test_button3.pack(side=tk.LEFT, padx=10)
-
-test_button4 = tk.Button(test_frame, text="Test Button 4", command=lambda: print("Test Button 4 clicked"))
-test_button4.pack(side=tk.LEFT, padx=10)
+# Log text box
+log_text = tk.Text(root, height=6, width=70, state='disabled', wrap='word', bg='#f5f5f5')
+log_text.pack(pady=10, padx=10)
 
 root.mainloop()

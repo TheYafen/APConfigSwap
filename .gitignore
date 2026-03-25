@@ -1,3 +1,6 @@
 test.txt
 build/
 ch_cfg.spec
+dist/
+images/
+venv/

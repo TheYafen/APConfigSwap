@@ -1,1 +1,2 @@
-py -m PyInstaller --onefile --noconsole --icon=icon.png ch_cfg.py
+py -m PyInstaller --onefile --clean --noconsole --icon=icon.ico ch_cfg.py
+pause
