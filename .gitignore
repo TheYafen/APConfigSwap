@@ -1,6 +1,5 @@
-test.txt
-build/
-ch_cfg.spec
-dist/
 images/
+build/
 venv/
+test.txt
+ch_cfg.spec
