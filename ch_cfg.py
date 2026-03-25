@@ -6,6 +6,8 @@ import psutil
 import configparser as cp
 
 VERSION = "1.3.0"
+WINDOW_WIDE = 500
+WINDOW_TALL = 250
 
 # Parse configs
 try:
@@ -84,7 +86,7 @@ def ldb_cleanup():
 # GUI setup
 root = tk.Tk()
 root.title(f"dbSwap v {VERSION}")
-root.geometry("550x200")
+root.geometry(f"{WINDOW_WIDE}x{WINDOW_TALL}")
 root.resizable(False, False)
 
 tk.Label(root, text=f"Select a file from {TARGET_DIR}:").pack(pady=5)
@@ -94,17 +96,17 @@ file_combo.pack(pady=3)
 if files:
     file_combo.current(0)
 
-button_frame_top = tk.Frame(root)
+button_frame_top    = tk.Frame(root)
 button_frame_top.pack(pady=3)
 
 button_frame_bottom = tk.Frame(root)
 button_frame_bottom.pack(pady=3)
 
-tk.Button(button_frame_top, text="Refresh DB list", command=update_files).pack(side=tk.LEFT, padx=5, pady=0)
-tk.Button(button_frame_top, text="Update config",   command=change_customer_db).pack(side=tk.LEFT, padx=5, pady=0)
+tk.Button(button_frame_top, text="Refresh DB list", command=update_files                            ).pack(side=tk.LEFT, padx=5, pady=0)
+tk.Button(button_frame_top, text="Update config",   command=change_customer_db                      ).pack(side=tk.LEFT, padx=5, pady=0)
 tk.Button(button_frame_top, text="Restore Default", command=lambda: change_customer_db(default=True)).pack(side=tk.LEFT, padx=5, pady=0)
+tk.Button(button_frame_top, text="Clean LDB",       command=ldb_cleanup                             ).pack(side=tk.LEFT, padx=5, pady=0)
 
-tk.Button(button_frame_bottom, text="Clean LDB",    command=ldb_cleanup).pack(side=tk.LEFT, padx=5, pady=0)
 tk.Button(button_frame_bottom, text="Restart AccuServer", command=lambda: restart_process(AS_PROCESS_NAME, AS_PROCESS_PATH)).pack(side=tk.LEFT, padx=5)
 
 # Log text box

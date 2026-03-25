@@ -3,3 +3,5 @@ build/
 venv/
 test.txt
 ch_cfg.spec
+AccuServer.cfg
+test.py
