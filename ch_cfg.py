@@ -5,7 +5,7 @@ import subprocess
 import psutil
 import configparser as cp
 
-VERSION = "1.2.0"
+VERSION = "1.3.0"
 
 # Parse configs
 try:
